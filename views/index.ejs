@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenges 19</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body> 
+    <div class="container">
+        <table class="content-table">
+            <thead>
+                <tr>
+                    <th class="id-styling">ID</th>
+                    <th>String</th>
+                    <th>Integer</th>
+                    <th>Float</th>
+                    <th>Date</th>
+                    <th>Boolean</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% data.forEach((item, index) => { %>
+                <tr class="active-row">
+                    <td class="id-styling"><%= index + 1 %></td>
+                    <td><%= item.string %></td>
+                    <td><%= item.integer %></td>
+                    <td><%= item.float %></td>
+                    <td><%= item.date %></td>
+                    <td><%= item.boolean %></td>
+                    <td><a class="btn-edit" href="/edit/<%= index %>">Edit</a><a class="btn-delete" href="/delete/<%= index %>">Delete</a></td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+        <a class="btn-styling" href="add">Add</a>
+    </div>
+</body>
+</html>
