@@ -1,49 +1,77 @@
-const express = require('express');
-const path = require('path');
-const bodyParser = require('body-parser');
+const express = require("express");
+const path = require("path");
+const bodyParser = require("body-parser");
 const app = express();
-const fs = require('fs');
-const datajson = fs.readFileSync('./data/data.json');
-let data = JSON.parse(datajson);
+const sqlite3 = require("sqlite3").verbose();
+const dbFile = __dirname + "/db/data.db";
 
-app.set('views', path.join(__dirname, 'views')); // specify the views
-app.set('view engine', 'ejs');
+let db = new sqlite3.Database(path.join(__dirname, "data.db"), (err) => {
+    if (err) throw err;
+//   if (err) {
+//     return console.error(err.message);
+//   }
+//   console.log("Connected to SQLite database.");
+});
+
+app.set("views", path.join(__dirname, "views")); // specify the views
+app.set("view engine", "ejs");
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
+
 // parse application/json
 app.use(bodyParser.json());
-app.use('/', express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => res.render('index', {data}));
-app.get('/add', (req, res) => res.render('add'));
+app.use("/", express.static(path.join(__dirname, "public")));
 
-app.post('/add', (req, res) => {
-    data.push({string: req.body.string, integer: req.body.integer, float: req.body.float, date: req.body.date, boolean: req.body.boolean})
-    fs.writeFileSync("./data/data.json", JSON.stringify(data));
-    res.redirect('/');
-})
+app.get("/", (req, res) => {
+  db.all("SELECT * FROM newData", (err, data) => {
+    if (err) throw err;
+    res.render("index", { data });
+  });
+});
+app.get("/add", (req, res) => res.render("add"));
 
-app.post('/edit/:id', (req, res) => {
-    const id = req.params.id;
-    const editnew = {string: req.body.string, integer: req.body.integer, float: req.body.float, date: req.body.date, boolean: req.body.boolean};
-    data.splice(id, 1, editnew);
-    fs.writeFileSync("./data/data.json", JSON.stringify(data));
-    res.redirect('/');
-})
+app.post("/add", (req, res) => {
+  const { string, integer, float, date, boolean } = req.body;
+  db.run(
+    `INSERT INTO newData (string, integer, float, date, boolean) VALUES ('${string}', ${integer}, ${float}, '${date}', '${boolean}')`,
+    (err, data) => {
+      if (err) throw err;
+      res.redirect("/");
+    }
+  );
+});
 
-app.get('/delete/:id', (req, res) => {
-    let index = req.params.id;
-    data.splice(index, 1);
-    fs.writeFileSync("./data/data.json", JSON.stringify(data));
-    res.redirect('/');
-})
+app.get("/edit/:id", (req, res) => {
+  const id = req.params.id;
+  db.all(`SELECT * FROM newData WHERE id = ${id}`, (err, data) => {
+    if (err) throw err;
+    res.render("edit", { item: data[0] });
+  });
+});
 
-app.get('/edit/:id', (req, res) => {
-    const id = req.params.id;
-    res.render('edit', { item: data[id] });
-})
+app.post("/edit/:id", (req, res) => {
+  const id = req.params.id;
+  const { string, integer, float, date, boolean } = req.body;
+  db.run(
+    `UPDATE newData set string='${string}', integer=${integer}, float=${float}, date='${date}', boolean='${boolean}' where id=${id}`,
+    (err, data) => {
+      if (err) throw err;
+      res.redirect("/");
+    }
+  );
+});
+
+app.get("/delete/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = `DELETE FROM newData WHERE id = '${id}'`;
+  db.run(sql, (err, data) => {
+    if (err) throw err;
+    res.redirect("/");
+  });
+});
 
 app.listen(3000, () => {
-    console.log('web ini berjalan di port 3000!!!');
-})
+  console.log("This server is running on port 3000!!!");
+});
